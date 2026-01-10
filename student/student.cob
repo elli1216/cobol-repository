@@ -2,7 +2,7 @@
        PROGRAM-ID. EZT-TO-COBOL-PRACTICE.
 
        ENVIRONMENT DIVISION.
-       CONFIGURATION SECTION. 
+       CONFIGURATION SECTION.
        SOURCE-COMPUTER. DARL-PC.
        OBJECT-COMPUTER. XXX.
 
@@ -20,7 +20,7 @@
        01 IN-RECORD          PIC X(26).
 
        FD  OUT-FILE.
-       01 OUT-RECORD         PIC X(26).
+       01 OUT-RECORD         PIC X(36).
 
        WORKING-STORAGE SECTION.
        01 WS-IN-DATA.
@@ -42,10 +42,10 @@
        PROCEDURE DIVISION.
        0000-MAIN.
            DISPLAY "--- PROGRAM START ---"
-           
+
            OPEN INPUT IN-FILE
                 OUTPUT OUT-FILE
-           
+
            IF WS-IN-STATUS NOT = "00"
               DISPLAY "ERROR: Input file status is: " WS-IN-STATUS
               STOP RUN
@@ -57,7 +57,7 @@
            AT END
               SET END-OF-FILE TO TRUE
            END-READ
-           
+
            IF END-OF-FILE
               DISPLAY "WARNING: File is empty/read failed immediately!"
            ELSE
@@ -77,18 +77,23 @@
            MOVE SPACES TO WS-OUT-DATA
 
            IF WS-IN-ID > "10000"
-              DISPLAY "  -> Condition Met! Writing to file."
+              MOVE "ACTIVE" TO WS-OUT-STATUS
               MOVE WS-IN-ID TO WS-OUT-ID
               MOVE WS-IN-NAME TO WS-OUT-NAME
               WRITE OUT-RECORD FROM WS-OUT-DATA
            ELSE
-              DISPLAY "  -> Condition Failed. Skipping."
+              IF WS-IN-ID < "10000" AND WS-IN-ID > "0"
+                 MOVE "ALUMNI" TO WS-OUT-STATUS
+                 MOVE WS-IN-ID TO WS-OUT-ID
+                 MOVE WS-IN-NAME TO WS-OUT-NAME
+                 WRITE OUT-RECORD FROM WS-OUT-DATA
+              END-IF
            END-IF
 
            READ IN-FILE INTO WS-IN-DATA
            AT END
               SET END-OF-FILE TO TRUE
            END-READ.
-        
+              
        2000-DISPLAY-RECORDS.
            DISPLAY OUT-RECORD.
