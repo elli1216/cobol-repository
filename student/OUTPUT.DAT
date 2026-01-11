@@ -1,3 +1,4 @@
+---STUDENT STATUS REPORT---
 00500 Juan Dela Cruz      ALUMNI
 12045 Maria Clara         ACTIVE
 08990 Jose Rizal          ALUMNI
@@ -10,6 +11,8 @@
 03000 Antonio Luna        ALUMNI
 15000 Marcelo Del Pilar   ACTIVE
 00999 Gregorio Del Pilar  ALUMNI
+10000 Equal Check Low     ACTIVE
 10001 Equal Check High    ACTIVE
 40400 Severino Reyes      ACTIVE
 07000 Francisco Balagtas  ALUMNI
+ACTIVE:   9 | ALUMNI:   7 | TOTAL:  16
