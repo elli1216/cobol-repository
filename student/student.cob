@@ -86,9 +86,7 @@
 
            PERFORM 1000-PROCESS-RECORDS UNTIL END-OF-FILE
 
-           MOVE WS-ACTIVE-COUNT TO WS-PRINT-ACTIVE
-           MOVE WS-ALUMNI-COUNT TO WS-PRINT-ALUMNI
-           MOVE WS-TOTAL-COUNT TO WS-PRINT-TOTAL
+           PERFORM 4000-MOVE-DATA-TO-PRINT
 
            WRITE OUT-RECORD FROM WS-FOOTER
 
@@ -102,18 +100,10 @@
            MOVE SPACES TO WS-OUT-DATA
 
            IF WS-IN-ID >= "10000"
-              ADD 1 TO WS-ACTIVE-COUNT *> increment active count
-              MOVE "ACTIVE" TO WS-OUT-STATUS
-              MOVE WS-IN-ID TO WS-OUT-ID
-              MOVE WS-IN-NAME TO WS-OUT-NAME
-              WRITE OUT-RECORD FROM WS-OUT-DATA
+              PERFORM 2000-WRITE-ACTIVE-RECORDS
            ELSE
               IF WS-IN-ID < "10000"
-                 ADD 1 TO WS-ALUMNI-COUNT *> increment alumni count
-                 MOVE "ALUMNI" TO WS-OUT-STATUS
-                 MOVE WS-IN-ID TO WS-OUT-ID
-                 MOVE WS-IN-NAME TO WS-OUT-NAME
-                 WRITE OUT-RECORD FROM WS-OUT-DATA
+                 PERFORM 3000-WRITE-ALUMNI-RECORDS
               END-IF
            END-IF
            ADD 1 TO WS-TOTAL-COUNT *> increment total count
@@ -122,3 +112,22 @@
            AT END
               SET END-OF-FILE TO TRUE
            END-READ.
+
+       2000-WRITE-ACTIVE-RECORDS.
+           ADD 1 TO WS-ACTIVE-COUNT *> increment active count
+           MOVE "ACTIVE" TO WS-OUT-STATUS
+           MOVE WS-IN-ID TO WS-OUT-ID
+           MOVE WS-IN-NAME TO WS-OUT-NAME
+           WRITE OUT-RECORD FROM WS-OUT-DATA.
+
+       3000-WRITE-ALUMNI-RECORDS.
+           ADD 1 TO WS-ALUMNI-COUNT *> increment alumni count
+           MOVE "ALUMNI" TO WS-OUT-STATUS
+           MOVE WS-IN-ID TO WS-OUT-ID
+           MOVE WS-IN-NAME TO WS-OUT-NAME
+           WRITE OUT-RECORD FROM WS-OUT-DATA.
+
+       4000-MOVE-DATA-TO-PRINT.
+           MOVE WS-ACTIVE-COUNT TO WS-PRINT-ACTIVE
+           MOVE WS-ALUMNI-COUNT TO WS-PRINT-ALUMNI
+           MOVE WS-TOTAL-COUNT TO WS-PRINT-TOTAL.
