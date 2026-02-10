@@ -147,7 +147,7 @@ Use this template for every new task.
 
 ```
 
-Or this template, depends on your needs. This structure was from the cobol program of the last interns in Landbank.
+Or this template with pagination, depends on your needs. This structure was from the cobol program of the last interns in Landbank.
 
 
 ```cobol
