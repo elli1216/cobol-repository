@@ -146,3 +146,203 @@ Use this template for every new task.
            END-READ.
 
 ```
+
+Or this template, depends on your needs. This structure was from the cobol program of the last interns in Landbank.
+
+
+```cobol
+      ******************************************************************
+      * AUTHOR: [YOUR NAME]
+      * DATE: [CURRENT DATE]
+      * PURPOSE: [REPORT DESCRIPTION]
+      * TECTONICS: COBC
+      ******************************************************************
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID. RPTTEMPL.
+
+       ENVIRONMENT DIVISION.
+       INPUT-OUTPUT SECTION.
+       FILE-CONTROL.
+           *> Input File (Sorted by the Key you want to group by!)
+           SELECT IN-FILE ASSIGN TO "INPUT.DAT"
+               ORGANIZATION IS LINE SEQUENTIAL.
+
+           *> Output Report File
+           SELECT OUT-FILE ASSIGN TO "OUTPUT.RPT"
+               ORGANIZATION IS LINE SEQUENTIAL.
+
+       DATA DIVISION.
+       FILE SECTION.
+       FD  IN-FILE
+           RECORD CONTAINS 80 CHARACTERS.
+       01 IN-RECORD.
+          05 IN-KEY-GROUP       PIC X(05).     *> The field triggers a break (e.
+          05 IN-AMOUNT          PIC 9(05)V99.
+          05 IN-DATA            PIC X(68).
+
+       FD  OUT-FILE
+           RECORD CONTAINS 133 CHARACTERS.
+       01 OUT-RECORD            PIC X(133).
+
+       WORKING-STORAGE SECTION.
+      *-------------------------------------------------------------*
+      * REPORT LAYOUTS (Hardcoded Print Lines)
+      *-------------------------------------------------------------*
+       01 WS-REPORT-LINES.
+          05 BLANK-LINE         PIC X(133)         VALUE SPACES.
+
+          05 HEADER-1.
+             10 FILLER          PIC X(01)          VALUE SPACE.
+             10 FILLER          PIC X(20)          VALUE
+                   "BANK NAME/COMPANY".
+             10 FILLER          PIC X(90)          VALUE SPACES.
+             10 FILLER          PIC X(10)          VALUE "PAGE:".
+             10 HDR-PAGE-NUM    PIC ZZZ9.
+
+          05 HEADER-GROUP.
+             10 FILLER          PIC X(01)          VALUE SPACE.
+             10 FILLER          PIC X(15)          VALUE
+                   "BRANCH CODE:   ".
+             10 HDR-GROUP-ID    PIC X(05).
+             10 FILLER          PIC X(112)         VALUE SPACES.
+
+          05 DETAIL-LINE.
+             10 FILLER          PIC X(05)          VALUE SPACES.
+             10 DET-DATA        PIC X(50).
+             10 FILLER          PIC X(05)          VALUE SPACES.
+             10 DET-AMOUNT      PIC ZZ,ZZ9.99.
+
+          05 GROUP-TOTAL-LINE.
+             10 FILLER          PIC X(40)          VALUE SPACES.
+             10 FILLER          PIC X(15)          VALUE
+                   "BRANCH TOTAL:  ".
+             10 GRP-TOTAL-AMT   PIC ZZZ,ZZZ,ZZ9.99.
+
+      *-------------------------------------------------------------*
+      * CONTROL FLAGS & COUNTERS
+      *-------------------------------------------------------------*
+       01 WS-CONTROLS.
+          05 WS-EOF             PIC X(01)          VALUE 'N'.
+          05 WS-FIRST-REC       PIC X(01)          VALUE 'Y'.
+           
+           *> "Hold" variable to compare against current record
+          05 WS-HOLD-GROUP      PIC X(05)          VALUE SPACES.
+
+       01 WS-COUNTERS.
+          05 WS-PAGE-COUNT      PIC 9(04)          VALUE 0.
+          05 WS-LINE-COUNT      PIC 9(02)          VALUE 55.
+                                                        *> Force header on start
+          05 WS-LINES-PER-PAGE  PIC 9(02)          VALUE 50.
+           
+          05 WS-SUBTOTAL        PIC 9(12)V99       VALUE 0.
+          05 WS-GRAND-TOTAL     PIC 9(14)V99       VALUE 0.
+
+       01 WS-PARAMS.
+          05 WS-PARAM-DATE      PIC X(08).
+
+       PROCEDURE DIVISION.
+       
+       *> ==========================================================
+       *> MAIN DRIVER SECTION
+       *> ==========================================================
+       0000-MAIN-RTN SECTION.
+       0000-MAIN.
+           *> 1. Setup
+           ACCEPT WS-PARAM-DATE FROM SYSIN
+           OPEN INPUT IN-FILE OUTPUT OUT-FILE
+           
+           *> 2. Prime Read
+           READ IN-FILE
+           AT END
+              MOVE 'Y' TO WS-EOF.
+
+           *> 3. Main Loop
+           PERFORM 0100-PROCESS-RTN UNTIL WS-EOF = 'Y'.
+
+           *> 4. Final Cleanup (Process last group totals)
+           IF WS-FIRST-REC = 'N'
+              PERFORM 0300-PRINT-TOTALS
+           END-IF.
+
+           CLOSE IN-FILE OUT-FILE
+           STOP RUN.
+
+       *> ==========================================================
+       *> PROCESSING SECTION (The "Heart" of the Logic)
+       *> ==========================================================
+       0100-PROCESS-RTN SECTION.
+       0100-PROCESS.
+           
+           *> A. Check for Control Break (Did the Branch change?)
+           IF WS-FIRST-REC = 'Y'
+              MOVE IN-KEY-GROUP TO WS-HOLD-GROUP
+              MOVE 'N' TO WS-FIRST-REC
+              PERFORM 0200-NEW-PAGE-RTN
+           ELSE
+              IF IN-KEY-GROUP NOT = WS-HOLD-GROUP
+                   *> 1. Print Totals for Old Group
+                 PERFORM 0300-PRINT-TOTALS
+                   *> 2. Reset for New Group
+                 MOVE IN-KEY-GROUP TO WS-HOLD-GROUP
+                 MOVE 0 TO WS-SUBTOTAL
+                   *> 3. Force New Page/Header for New Group
+                 PERFORM 0200-NEW-PAGE-RTN
+              END-IF
+           END-IF.
+
+           *> B. Check Pagination (Is page full?)
+           IF WS-LINE-COUNT > WS-LINES-PER-PAGE
+              PERFORM 0200-NEW-PAGE-RTN
+           END-IF.
+
+           *> C. Process Detail
+           MOVE IN-DATA TO DET-DATA
+           MOVE IN-AMOUNT TO DET-AMOUNT
+           
+           ADD IN-AMOUNT TO WS-SUBTOTAL.
+
+           WRITE OUT-RECORD FROM DETAIL-LINE AFTER ADVANCING 1 LINE.
+           ADD 1 TO WS-LINE-COUNT.
+
+           *> D. Read Next
+           READ IN-FILE
+           AT END
+              MOVE 'Y' TO WS-EOF.
+
+       0100-EXIT.
+           EXIT.
+
+       *> ==========================================================
+       *> PAGINATION SECTION
+       *> ==========================================================
+       0200-NEW-PAGE-RTN SECTION.
+       0200-NEW-PAGE.
+           ADD 1 TO WS-PAGE-COUNT.
+           MOVE WS-PAGE-COUNT TO HDR-PAGE-NUM.
+           MOVE WS-HOLD-GROUP TO HDR-GROUP-ID.
+
+           WRITE OUT-RECORD FROM HEADER-1 AFTER ADVANCING PAGE.
+           WRITE OUT-RECORD FROM HEADER-GROUP AFTER ADVANCING 2 LINES.
+           WRITE OUT-RECORD FROM BLANK-LINE AFTER ADVANCING 1 LINE.
+
+           MOVE 0 TO WS-LINE-COUNT.
+
+       0200-EXIT.
+           EXIT.
+
+       *> ==========================================================
+       *> TOTALS SECTION
+       *> ==========================================================
+       0300-PRINT-TOTALS SECTION.
+       0300-TOTALS.
+           MOVE WS-SUBTOTAL TO GRP-TOTAL-AMT.
+           
+           WRITE OUT-RECORD FROM BLANK-LINE AFTER ADVANCING 1 LINE.
+           WRITE OUT-RECORD FROM GROUP-TOTAL-LINE AFTER ADVANCING 1 LINE.
+           WRITE OUT-RECORD FROM BLANK-LINE AFTER ADVANCING 1 LINE.
+           
+           ADD 3 TO WS-LINE-COUNT.
+
+       0300-EXIT.
+           EXIT.
+```
