@@ -6,7 +6,7 @@
 | Keyword | Description |
 | --- | --- |
 | **`IDENTIFICATION DIVISION`** | The first line of every program. It marks the start of the code metadata. |
-| **`PROGRAM-ID`** | Specifies the name the computer uses to identify this program (e.g., `MCCNMRPT`). |
+| **`PROGRAM-ID`** | Specifies the name the computer uses to identify this program, max 8 characters (e.g., `MCCNMRPT`). |
 | **`ENVIRONMENT DIVISION`** | The section that links your code to the outside world (files, computers, printers). |
 | **`DATA DIVISION`** | The section where **all** variables, files, and memory structures must be defined. |
 | **`PROCEDURE DIVISION`** | The section containing the executable logic (Read, Write, Add, If/Else). |
@@ -21,9 +21,13 @@
 | **`FILE-CONTROL`** | The paragraph where you map internal file names to external system files. |
 | **`SELECT ... ASSIGN TO`** | Connects your code name (`IMCREGFL`) to the Mainframe system name (`SYS012...`). |
 | **`ORGANIZATION IS SEQUENTIAL`** | Tells the computer to read the file line-by-line from start to finish. |
+| **`ORGANIZATION IS INDEXED`** | Records are organized by a unique Key (like an ID) for fast, random access. |
+| **`ACCESS MODE`** | Defines how to read the file: `SEQUENTIAL` (one-by-one), `RANDOM` (by key), or `DYNAMIC` (both). |
 | **`FD`** | **File Description**. Describes the physical properties of a file (length, type). |
+| **`BLOCK CONTAINS`** | Defines physical block size. Use `BLOCK CONTAINS 0 RECORDS` for Mainframe performance. |
 | **`RECORD CONTAINS`** | A safety check defining exactly how many characters are in one line of the file. |
 | **`RECORDING MODE F`** | **Fixed**. Indicates every line in the file has the exact same length. |
+| **`RECORDING MODE V`** | **Variable**. Indicates lines in the file can have different lengths (Used for VB files). |
 | **`COPY`** | Imports external code (Copybooks). Used to share standard layouts across teams. |
 
 ---
@@ -138,11 +142,13 @@
 
 ### Database & VSAM (File Handling)
 
-Since you mentioned "Report for Negotiated", you might eventually touch **VSAM** (Indexed) files.
+For **VSAM** (Indexed) files.
 
 | Keyword | Description |
 | --- | --- |
 | **`INVALID KEY`** | Used when reading an Indexed file. "If I can't find the Record ID you asked for, do this..." |
+| **`RECORD KEY`** | The primary field used to identify a record in an Indexed (VSAM) file. |
+| **`RELATIVE KEY`** | A numeric field used to identify a record's position in a Relative file. |
 | **`START`** | Positions the file pointer to a specific record *without* reading it yet. Used to "jump" to the middle of a file. |
 | **`REWRITE`** | Updates an *existing* record in a file (instead of adding a new one). |
 | **`DELETE`** | Removes a record from a file. |
