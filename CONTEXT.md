@@ -1,3 +1,5 @@
+---
+
 ### COBOL Coding Guidelines
 
 **Role:** You are an Expert Mainframe Developer migrating Easytrieve programs to GnuCOBOL/IBM Enterprise COBOL.Ensure adherence to GnuCOBOL/IBM Enterprise COBOL Standards.
@@ -7,9 +9,10 @@
 1. **File Management:**
 * Use `OPEN INPUT`, `OPEN OUTPUT`, and always explicitly `CLOSE` all files before terminating.
 * Always use `ORGANIZATION IS SEQUENTIAL` for Mainframe uploads.
+* **Lookup Files (JCL with 'LKP'):** If the JCL defines a lookup file (indicated by 'LKP' in its name, e.g., `// DLBL STLKPMI,'UVBN.ST.ST.P100.STLKPM.V',,VSAM,CAT=ST21UBC`), it should be handled as a lookup call within the `PROCEDURE DIVISION` logic, and **NOT** defined in the `ENVIRONMENT DIVISION`.
 
 
-2. **File Definitions (FB vs. VB vs. VS):**
+2. **File Definitions (FD vs. VB vs. VS):**
 * **ENSURE:** Precise file definitions (FB/VB/VSAM) mirroring EZT layouts.
 * **CRITICAL:** Check the Easytrieve `FILE` statement (`FB`, `VB`, or `VS`).
 * **MANDATORY:** Ensure the spacing and field positions in the COBOL file definitions replicate exactly what is in the Easytrieve (EZT) report or file layout.
@@ -99,7 +102,7 @@ END-IF.
 5. **Safe Syntax (Write & Spaces):**
 * **FORBIDDEN:** Do **NOT** use `WRITE ... FROM SPACES`. This causes "Severe" errors on strict Mainframe compilers.
 * **MANDATORY:** Declare a variable in `WORKING-STORAGE` (e.g., `01 WS-BLANK-LINE PIC X(132) VALUE SPACES.`) that matches your FD size, and write from that variable instead.
-* **IMPORTANT:** Do **NOT** use **double quotations marks** **(" ")** as it will be detected as error in mainframe environment. Always use **single quotations marks** **(' ')**.
+* **IMPORTANT:** Do **NOT** use **double quotations marks** **(" ")** as it will be detected as error in mainframe environment.
 
 
 6. **Debugging & Visibility:**
@@ -128,6 +131,49 @@ END-IF.
                  MOVE "Y" TO WS-EOF-FILENAME
               END-READ
            END-IF.
+```
+
+11. **VSAM Lookup Logic Pattern:**  
+* When a lookup file is identified (e.g., a file with 'LKP' in the JCL), it's accessed via a `CALL` to a dedicated lookup program (e.g., `IMLKPMV`), not through a standard `READ`.
+* **Naming Assumptions:** If you are unsure about the exact name of the file to be `COPY`ed or `CALL`ed, assume a logical name based on project conventions (e.g., `STWSLU`, `STLKPMV`) and include a COBOL comment stating that it is an assumed name.
+* **Copybooks:** Ensure the relevant lookup and control copybooks (e.g., `STWSLU`, `SIWSCNTL`) are included in `WORKING-STORAGE` to provide the necessary data structures (`I-O-CONTROL-AREA`, `STWS-LOOKUP-RECORD`).
+* **Parameter Setup:** Create a dedicated paragraph to set up the lookup parameters before the call.
+    1.  Initialize the lookup key fields (`IM-LKUP-KEY`, `IM-LKUP-CTL*`).
+    2.  Move the value to be searched for into `IM-LKUP-VALUE`.
+    3.  Set the access mode: `MOVE 'I' TO I-O-CONTROL-ACCESS`.
+    4.  Set the operation type: `MOVE 'K' TO I-O-CONTROL-OPERATOR` for keyed reads.
+* **Execution and Result Handling:**
+    *   Use the `CALL` statement: `CALL 'IMLKPMV' USING I-O-CONTROL-AREA, IMWS-LOOKUP-RECORD.`
+    *   Check the result immediately using the `I-O-88-NOT-FOUND` condition.
+    *   If the lookup is successful, the result will be in a field like `IM-LKUP-NAME`.
+
+*   **Example Pattern:**
+```cobol
+       0100-BRANCH-LU-RTN SECTION.
+       0100-BRANCH-LU.
+           MOVE SPACES      TO IM-LKUP-KEY.
+           MOVE '51'        TO IM-LKUP-CTL1.
+           MOVE '000'       TO IM-LKUP-CTL2.
+           MOVE '000'       TO IM-LKUP-CTL3.
+           MOVE [SOURCE-KEY-FIELD] TO IM-LKUP-VALUE.
+           MOVE '03'        TO IM-LKUP-FIELD.
+ 
+           MOVE 'I' TO I-O-CONTROL-ACCESS.
+           MOVE 'K' TO I-O-CONTROL-OPERATOR.
+ 
+           CALL 'IMLKPMV'   USING     I-O-CONTROL-AREA,
+                                      IMWS-LOOKUP-RECORD.
+ 
+           IF I-O-88-NOT-FOUND
+               *> Handle case where key is not found
+               MOVE 'NOT FOUND' TO [TARGET-FIELD]
+           ELSE
+               *> Handle successful lookup
+               MOVE IM-LKUP-NAME TO [TARGET-FIELD]
+           END-IF.
+ 
+       0100-EXIT.
+           EXIT.
 ```
 
 Refer to this file for the EZT Code Reading Guide: [Easytrieve Reading Guide](EASYTRIEVE.md)
