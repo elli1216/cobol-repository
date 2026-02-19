@@ -53,7 +53,8 @@ The difference is entirely in the **FD (File Description)**. The `PROCEDURE DIVI
        FD  INPUT-FILE
            RECORDING MODE IS F         *> "Fixed"
            LABEL RECORDS ARE STANDARD
-           BLOCK CONTAINS 0 RECORDS.   *> Let system handle block size
+           BLOCK CONTAINS 0 RECORDS    *> Let system handle block size
+           RECORD CONTAINS 80 CHARACTERS.   
        01  INPUT-REC      PIC X(80).   *> EXACT size match (e.g., 80)
 ```
 
@@ -65,7 +66,8 @@ The difference is entirely in the **FD (File Description)**. The `PROCEDURE DIVI
        FD  STACTMI-FILE
            RECORDING MODE IS V         *> "Variable"
            LABEL RECORDS ARE STANDARD
-           BLOCK CONTAINS 0 RECORDS.
+           BLOCK CONTAINS 0 RECORDS
+           RECORD IS VARYING IN SIZE FROM 1 TO 18050. *> Subtract 4 bytes of max length
        01  STACTMI-REC.
            05  REC-DATA   PIC X(18054). *> MAX size from EZT
 ```
