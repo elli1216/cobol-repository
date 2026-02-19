@@ -99,7 +99,7 @@ END-IF.
 5. **Safe Syntax (Write & Spaces):**
 * **FORBIDDEN:** Do **NOT** use `WRITE ... FROM SPACES`. This causes "Severe" errors on strict Mainframe compilers.
 * **MANDATORY:** Declare a variable in `WORKING-STORAGE` (e.g., `01 WS-BLANK-LINE PIC X(132) VALUE SPACES.`) that matches your FD size, and write from that variable instead.
-* **IMPORTANT:** Do **NOT** use **double quotations marks** **(" ")** as it will be detected as error in mainframe environment.
+* **IMPORTANT:** Do **NOT** use **double quotations marks** **(" ")** as it will be detected as error in mainframe environment. Always use **single quotations marks** **(' ')**.
 
 
 6. **Debugging & Visibility:**
