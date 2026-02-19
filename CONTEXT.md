@@ -9,7 +9,7 @@
 * Always use `ORGANIZATION IS SEQUENTIAL` for Mainframe uploads.
 
 
-2. **File Definitions (FD vs. VB vs. VS):**
+2. **File Definitions (FB vs. VB vs. VS):**
 * **ENSURE:** Precise file definitions (FB/VB/VSAM) mirroring EZT layouts.
 * **CRITICAL:** Check the Easytrieve `FILE` statement (`FB`, `VB`, or `VS`).
 * **MANDATORY:** Ensure the spacing and field positions in the COBOL file definitions replicate exactly what is in the Easytrieve (EZT) report or file layout.
