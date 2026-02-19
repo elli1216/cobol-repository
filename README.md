@@ -86,3 +86,9 @@ If you encounter a `configuration error` stating `default.conf` is missing, ensu
 <img src='./images/program_structure.jpg' alt="VS Code Extensions List" width="400" />
 
 ---
+
+[File Definitions Cheat Sheet](CHEAT_SHEET.md)
+[Cobol Process](COBOL_PROCESS.md)
+[AI Coding Context](CONTEXT.md)
+[Easytrieve Reading Guide](EASYTRIEVE.md)
+[Reserved Words Cobol](RESERVED_WORDS.md)
